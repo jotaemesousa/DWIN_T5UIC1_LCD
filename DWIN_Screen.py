@@ -73,11 +73,11 @@ class T5UIC1_LCD:
 	def Word(self, wval):
 		self.DWIN_SendBuf += int(wval).to_bytes(2, byteorder='big')
 
-	def Long(self, lval):
-		self.DWIN_SendBuf += int(lval).to_bytes(4, byteorder='big')
+	def Long(self, lval, is_signed):
+		self.DWIN_SendBuf += int(lval).to_bytes(4, byteorder='big', signed=is_signed)
 
-	def D64(self, value):
-		self.DWIN_SendBuf += int(value).to_bytes(8, byteorder='big')
+	def D64(self, value, is_signed):
+		self.DWIN_SendBuf += int(value).to_bytes(8, byteorder='big', signed=is_signed)
 
 	def String(self, string):
 		self.DWIN_SendBuf += string.encode('utf-8')
@@ -313,7 +313,7 @@ class T5UIC1_LCD:
 	#   iNum: Number of digits
 	#   x/y: Upper-left coordinate
 	#   value: Integer value
-	def Draw_IntValue(self, bShow, zeroFill, zeroMode, size, color, bColor, iNum, x, y, value):
+	def Draw_IntValue(self, bShow, zeroFill, zeroMode, size, color, bColor, iNum, x, y, value, isSigned=False):
 		self.Byte(0x14)
 		# Bit 7: bshow
 		# Bit 6: 1 = signed; 0 = unsigned number;
@@ -327,7 +327,7 @@ class T5UIC1_LCD:
 		self.Byte(0)  # fNum
 		self.Word(x)
 		self.Word(y)
-		self.D64(value)
+		self.D64(value, isSigned)
 		self.Send()
 
 	#  Draw a floating point number
@@ -341,7 +341,7 @@ class T5UIC1_LCD:
 	#   fNum: Number of decimal digits
 	#   x/y: Upper-left point
 	#   value: Float value
-	def Draw_FloatValue(self, bShow, zeroFill, zeroMode, size, color, bColor, iNum, fNum, x, y, value):
+	def Draw_FloatValue(self, bShow, zeroFill, zeroMode, size, color, bColor, iNum, fNum, x, y, value, isSigned=False):
 		self.Byte(0x14)
 		self.Byte((bShow * 0x80) | (zeroFill * 0x20) | (zeroMode * 0x10) | size)
 		self.Word(color)
@@ -350,16 +350,16 @@ class T5UIC1_LCD:
 		self.Byte(fNum)
 		self.Word(x)
 		self.Word(y)
-		self.Long(value)
+		self.Long(value, isSigned)
 		self.Send()
 
-	def Draw_Signed_Float(self, size, bColor, iNum, fNum, x, y, value):
+	def Draw_Signed_Float(self, size, bColor, iNum, fNum, x, y, value, isSigned=False):
 		if value < 0:
 			self.Draw_String(False, True, size, self.Color_White, bColor, x - 6, y, "-")
-			self.Draw_FloatValue(True, True, 0, size, self.Color_White, bColor, iNum, fNum, x, y, -value)
+			self.Draw_FloatValue(True, True, 0, size, self.Color_White, bColor, iNum, fNum, x, y, -value, isSigned)
 		else:
 			self.Draw_String(False, True, size, self.Color_White, bColor, x - 6, y, " ")
-			self.Draw_FloatValue(True, True, 0, size, self.Color_White, bColor, iNum, fNum, x, y, value)
+			self.Draw_FloatValue(True, True, 0, size, self.Color_White, bColor, iNum, fNum, x, y, value, isSigned)
 
 	# /*---------------------------------------- Picture related functions ----------------------------------------*/
 
